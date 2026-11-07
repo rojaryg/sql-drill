@@ -10,3 +10,21 @@ data class SqlLesson(
     val resultExplanation: String,
     val tip: String
 )
+
+data class SqlExampleTable(
+    val name: String,
+    val columns: List<String>,
+    val rows: List<List<String>>
+)
+
+data class SqlCourse(
+    val id: String,
+    val title: String,
+    val description: String,
+    val prerequisite: String,
+    val sourceTables: List<SqlExampleTable>,
+    val lessons: List<SqlLesson>,
+    val combinedExample: SqlLesson,
+    val recap: List<String>,
+    val practiceFilter: DifficultyFilter
+)

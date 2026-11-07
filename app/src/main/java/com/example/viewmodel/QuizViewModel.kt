@@ -1,6 +1,7 @@
 package com.example.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.data.SqlJoinLessonRepository
 import com.example.data.SqlLessonRepository
 import com.example.data.SqlQuestionRepository
 import com.example.model.DifficultyFilter
@@ -15,15 +16,24 @@ class QuizViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(QuizUiState())
     val uiState: StateFlow<QuizUiState> = _uiState.asStateFlow()
 
-    fun openBasicSqlLesson() {
-        _uiState.update {
-            it.copy(currentScreen = ScreenState.LEARN, currentLessonIndex = 0)
-        }
+    fun navigateToSection(screen: ScreenState) {
+        if (!screen.isMainSection || !_uiState.value.currentScreen.isMainSection) return
+        _uiState.update { it.copy(currentScreen = screen) }
     }
 
     fun selectLesson(index: Int) {
         if (index !in SqlLessonRepository.basicSqlLessons.indices) return
         _uiState.update { it.copy(currentLessonIndex = index) }
+    }
+
+    fun selectJoinLesson(index: Int) {
+        if (index !in SqlJoinLessonRepository.lessons.indices) return
+        _uiState.update { it.copy(currentJoinLessonIndex = index) }
+    }
+
+    fun startJoinPractice() {
+        selectDifficultyFilter(SqlJoinLessonRepository.course.practiceFilter)
+        startQuizSession()
     }
 
     fun startBasicSqlPractice() {

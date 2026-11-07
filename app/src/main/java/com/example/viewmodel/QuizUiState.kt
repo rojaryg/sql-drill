@@ -8,9 +8,13 @@ import com.example.model.QuestionResult
 enum class ScreenState {
     HOME,
     LEARN,
+    JOINS,
     QUIZ,
     RESULT,
-    REVIEW
+    REVIEW;
+
+    val isMainSection: Boolean
+        get() = this == HOME || this == LEARN || this == JOINS
 }
 
 data class DifficultyBreakdown(
@@ -25,6 +29,7 @@ data class DifficultyBreakdown(
 data class QuizUiState(
     val currentScreen: ScreenState = ScreenState.HOME,
     val currentLessonIndex: Int = 0,
+    val currentJoinLessonIndex: Int = 0,
     val selectedFilter: DifficultyFilter = DifficultyFilter.MIXED,
     val sessionQuestions: List<Question> = emptyList(),
     val currentIndex: Int = 0,
