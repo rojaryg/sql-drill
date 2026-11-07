@@ -7,6 +7,7 @@ import com.example.model.QuestionResult
 
 enum class ScreenState {
     HOME,
+    LEARN,
     QUIZ,
     RESULT,
     REVIEW
@@ -23,6 +24,7 @@ data class DifficultyBreakdown(
 
 data class QuizUiState(
     val currentScreen: ScreenState = ScreenState.HOME,
+    val currentLessonIndex: Int = 0,
     val selectedFilter: DifficultyFilter = DifficultyFilter.MIXED,
     val sessionQuestions: List<Question> = emptyList(),
     val currentIndex: Int = 0,

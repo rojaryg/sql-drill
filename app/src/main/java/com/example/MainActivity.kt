@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.ResultScreen
@@ -55,7 +56,16 @@ fun SqlDrillApp(quizViewModel: QuizViewModel = viewModel()) {
                 HomeScreen(
                     uiState = uiState,
                     onSelectFilter = quizViewModel::selectDifficultyFilter,
-                    onStartSession = quizViewModel::startQuizSession
+                    onStartSession = quizViewModel::startQuizSession,
+                    onOpenLearning = quizViewModel::openBasicSqlLesson
+                )
+            }
+            ScreenState.LEARN -> {
+                LearnScreen(
+                    currentLessonIndex = uiState.currentLessonIndex,
+                    onSelectLesson = quizViewModel::selectLesson,
+                    onBack = quizViewModel::returnToHome,
+                    onStartPractice = quizViewModel::startBasicSqlPractice
                 )
             }
             ScreenState.QUIZ -> {
