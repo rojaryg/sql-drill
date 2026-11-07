@@ -8,14 +8,21 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.SqlJoinLessonRepository
+import com.example.data.SqlLessonRepository
+import com.example.ui.components.MainNavigationBar
 import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.QuizScreen
@@ -46,51 +53,76 @@ class MainActivity : ComponentActivity() {
 fun SqlDrillApp(quizViewModel: QuizViewModel = viewModel()) {
     val uiState by quizViewModel.uiState.collectAsStateWithLifecycle()
 
-    AnimatedContent(
-        targetState = uiState.currentScreen,
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-        label = "ScreenTransition"
-    ) { screen ->
-        when (screen) {
-            ScreenState.HOME -> {
-                HomeScreen(
-                    uiState = uiState,
-                    onSelectFilter = quizViewModel::selectDifficultyFilter,
-                    onStartSession = quizViewModel::startQuizSession,
-                    onOpenLearning = quizViewModel::openBasicSqlLesson
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            if (uiState.currentScreen.isMainSection) {
+                MainNavigationBar(
+                    currentScreen = uiState.currentScreen,
+                    onSelectSection = quizViewModel::navigateToSection
                 )
             }
-            ScreenState.LEARN -> {
-                LearnScreen(
-                    currentLessonIndex = uiState.currentLessonIndex,
-                    onSelectLesson = quizViewModel::selectLesson,
-                    onBack = quizViewModel::returnToHome,
-                    onStartPractice = quizViewModel::startBasicSqlPractice
-                )
-            }
-            ScreenState.QUIZ -> {
-                QuizScreen(
-                    uiState = uiState,
-                    onSelectOption = quizViewModel::selectOption,
-                    onSubmitAnswer = quizViewModel::submitAnswer,
-                    onNextQuestion = quizViewModel::nextQuestion,
-                    onToggleExplanation = quizViewModel::toggleExplanationSheet,
-                    onExitQuiz = quizViewModel::returnToHome
-                )
-            }
-            ScreenState.RESULT -> {
-                ResultScreen(
-                    uiState = uiState,
-                    onTryAgain = quizViewModel::restartQuiz,
-                    onReturnHome = quizViewModel::returnToHome,
-                    onOpenReview = quizViewModel::openReview
-                )
-            }
-            ScreenState.REVIEW -> {
-                ReviewScreen(
-                    uiState = uiState,
-                    onBackToResults = quizViewModel::backToResults
-                )
+        }
+    ) { contentPadding ->
+        AnimatedContent(
+            targetState = uiState.currentScreen,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+                .consumeWindowInsets(contentPadding),
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "ScreenTransition"
+        ) { screen ->
+            when (screen) {
+                ScreenState.HOME -> {
+                    HomeScreen(
+                        uiState = uiState,
+                        onSelectFilter = quizViewModel::selectDifficultyFilter,
+                        onStartSession = quizViewModel::startQuizSession
+                    )
+                }
+                ScreenState.LEARN -> {
+                    LearnScreen(
+                        course = SqlLessonRepository.course,
+                        currentLessonIndex = uiState.currentLessonIndex,
+                        onSelectLesson = quizViewModel::selectLesson,
+                        onBack = quizViewModel::returnToHome,
+                        onStartPractice = quizViewModel::startBasicSqlPractice
+                    )
+                }
+                ScreenState.JOINS -> {
+                    LearnScreen(
+                        course = SqlJoinLessonRepository.course,
+                        currentLessonIndex = uiState.currentJoinLessonIndex,
+                        onSelectLesson = quizViewModel::selectJoinLesson,
+                        onBack = quizViewModel::returnToHome,
+                        onStartPractice = quizViewModel::startJoinPractice
+                    )
+                }
+                ScreenState.QUIZ -> {
+                    QuizScreen(
+                        uiState = uiState,
+                        onSelectOption = quizViewModel::selectOption,
+                        onSubmitAnswer = quizViewModel::submitAnswer,
+                        onNextQuestion = quizViewModel::nextQuestion,
+                        onToggleExplanation = quizViewModel::toggleExplanationSheet,
+                        onExitQuiz = quizViewModel::returnToHome
+                    )
+                }
+                ScreenState.RESULT -> {
+                    ResultScreen(
+                        uiState = uiState,
+                        onTryAgain = quizViewModel::restartQuiz,
+                        onReturnHome = quizViewModel::returnToHome,
+                        onOpenReview = quizViewModel::openReview
+                    )
+                }
+                ScreenState.REVIEW -> {
+                    ReviewScreen(
+                        uiState = uiState,
+                        onBackToResults = quizViewModel::backToResults
+                    )
+                }
             }
         }
     }

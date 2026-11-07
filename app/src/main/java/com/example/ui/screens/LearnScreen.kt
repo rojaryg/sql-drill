@@ -40,36 +40,37 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.data.SqlLessonRepository
+import com.example.model.SqlCourse
 import com.example.ui.components.CodeEditorBox
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearnScreen(
+    course: SqlCourse,
     currentLessonIndex: Int,
     onSelectLesson: (Int) -> Unit,
     onBack: () -> Unit,
     onStartPractice: () -> Unit
 ) {
-    val lessons = SqlLessonRepository.basicSqlLessons
+    val lessons = course.lessons
     val lesson = lessons[currentLessonIndex]
     val isLastLesson = currentLessonIndex == lessons.lastIndex
     val contentState = rememberLazyListState()
     val topicsState = rememberLazyListState()
 
     BackHandler(onBack = onBack)
-    LaunchedEffect(currentLessonIndex) {
+    LaunchedEffect(course.id, currentLessonIndex) {
         contentState.scrollToItem(0)
         topicsState.animateScrollToItem(currentLessonIndex)
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().testTag("basic_sql_learning_screen"),
+        modifier = Modifier.fillMaxSize().testTag("${course.id}_learning_screen"),
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("Basic SQL", fontWeight = FontWeight.Bold)
+                        Text(course.title, fontWeight = FontWeight.Bold)
                         Text(
                             text = "Materi ${currentLessonIndex + 1} dari ${lessons.size}",
                             style = MaterialTheme.typography.labelMedium,
@@ -113,7 +114,7 @@ fun LearnScreen(
                         },
                         modifier = Modifier.weight(1f).testTag("next_lesson_button")
                     ) {
-                        Text(if (isLastLesson) "Latihan Basic" else "Selanjutnya")
+                        Text(if (isLastLesson) "Latihan ${course.practiceFilter.displayName}" else "Selanjutnya")
                     }
                 }
             }
@@ -147,6 +148,18 @@ fun LearnScreen(
             ) {
                 item(key = "introduction") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (currentLessonIndex == 0) {
+                            Text(
+                                text = course.description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = course.prerequisite,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Text(
                             text = lesson.keyword,
                             style = MaterialTheme.typography.labelLarge,
@@ -164,24 +177,18 @@ fun LearnScreen(
                         )
                     }
                 }
-                item(key = "source") {
-                    LessonSection(title = "Tabel contoh: employees") {
-                        Text(
-                            text = "Semua materi menggunakan data yang sama.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        LessonDataTable(
-                            columns = SqlLessonRepository.exampleColumns,
-                            rows = SqlLessonRepository.exampleRows
-                        )
+                course.sourceTables.forEach { table ->
+                    item(key = "source_${table.name}") {
+                        LessonSection(title = "Tabel contoh: ${table.name}") {
+                            LessonDataTable(columns = table.columns, rows = table.rows)
+                        }
                     }
                 }
                 item(key = "query") {
                     LessonSection(title = "Contoh query") {
                         CodeEditorBox(
                             sqlCode = lesson.sql,
-                            fileName = "basic_${lesson.keyword.lowercase().replace(" ", "_")}.sql"
+                            fileName = "${course.id}_${currentLessonIndex + 1}.sql"
                         )
                     }
                 }
@@ -223,40 +230,39 @@ fun LearnScreen(
                 }
                 if (isLastLesson) {
                     item(key = "combined") {
-                        LessonSection(title = "Gabungkan kelima konsep") {
+                        val example = course.combinedExample
+                        LessonSection(title = example.title) {
                             Text(
-                                text = "Ambil karyawan dengan gaji minimal 60000, kelompokkan berdasarkan department, lalu urutkan total gaji dari terbesar.",
+                                text = example.explanation,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             CodeEditorBox(
-                                sqlCode = SqlLessonRepository.combinedSql,
-                                fileName = "basic_sql_summary.sql"
+                                sqlCode = example.sql,
+                                fileName = "${course.id}_summary.sql"
                             )
                             LessonDataTable(
-                                columns = SqlLessonRepository.combinedResultColumns,
-                                rows = SqlLessonRepository.combinedResultRows
+                                columns = example.resultColumns,
+                                rows = example.resultRows
                             )
                             Text(
-                                text = "Deni tersaring oleh WHERE. Dua karyawan Sales memiliki total gaji 160000, lebih besar dari total 140000 milik dua karyawan Engineering yang lolos.",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                    item(key = "execution_order") {
-                        LessonSection(title = "Urutan penulisan dan proses") {
-                            Text(
-                                text = "Ditulis: SELECT → FROM → WHERE → GROUP BY → ORDER BY",
+                                text = example.resultExplanation,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = "Diproses secara logis untuk contoh ini: FROM → WHERE → GROUP BY → SELECT → ORDER BY",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = "Siap menguji pemahaman? Tombol Latihan Basic membuka sesi 10 soal Basic.",
+                                text = example.tip,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
+                        }
+                    }
+                    item(key = "recap") {
+                        LessonSection(title = "Bekal sebelum latihan") {
+                            course.recap.forEach { point ->
+                                Text(
+                                    text = "• $point",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
                 }

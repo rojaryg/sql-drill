@@ -1,5 +1,8 @@
 package com.example.data
 
+import com.example.model.DifficultyFilter
+import com.example.model.SqlCourse
+import com.example.model.SqlExampleTable
 import com.example.model.SqlLesson
 
 object SqlLessonRepository {
@@ -103,5 +106,32 @@ object SqlLessonRepository {
     val combinedResultRows = listOf(
         listOf("Sales", "2", "160000"),
         listOf("Engineering", "2", "140000")
+    )
+
+    val course = SqlCourse(
+        id = "basic_sql",
+        title = "Basic SQL",
+        description = "Mulai dari satu tabel: pilih kolom, saring baris, buat kelompok, lalu urutkan hasilnya.",
+        prerequisite = "Mulai di sini jika kamu baru belajar SQL. Setelah selesai, lanjutkan ke halaman JOIN.",
+        sourceTables = listOf(
+            SqlExampleTable("employees", exampleColumns, exampleRows)
+        ),
+        lessons = basicSqlLessons,
+        combinedExample = SqlLesson(
+            keyword = "RANGKUMAN",
+            title = "Gabungkan kelima konsep",
+            explanation = "Ambil karyawan dengan gaji minimal 60000, kelompokkan berdasarkan department, lalu urutkan total gaji dari terbesar.",
+            sql = combinedSql,
+            resultColumns = combinedResultColumns,
+            resultRows = combinedResultRows,
+            resultExplanation = "Deni tersaring oleh WHERE. Dua karyawan Sales memiliki total gaji 160000, lebih besar dari total 140000 milik dua karyawan Engineering yang lolos.",
+            tip = "Urutan penulisan SQL berbeda dari urutan pemrosesan logisnya."
+        ),
+        recap = listOf(
+            "Ditulis: SELECT → FROM → WHERE → GROUP BY → ORDER BY",
+            "Diproses secara logis untuk contoh ini: FROM → WHERE → GROUP BY → SELECT → ORDER BY",
+            "Latihan Basic membuka sesi 10 soal Basic. Setelah itu, tab JOIN melanjutkan materi ke beberapa tabel."
+        ),
+        practiceFilter = DifficultyFilter.BASIC
     )
 }

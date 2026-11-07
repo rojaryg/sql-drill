@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.data.SqlJoinLessonRepository
 import com.example.data.SqlQuestionRepository
 import com.example.model.Difficulty
 import com.example.model.DifficultyFilter
@@ -94,7 +95,7 @@ class SqlDrillUnitTest {
         }
         viewModel.returnToHome()
 
-        viewModel.openBasicSqlLesson()
+        viewModel.navigateToSection(ScreenState.LEARN)
         assertEquals(ScreenState.LEARN, viewModel.uiState.value.currentScreen)
         assertEquals(0, viewModel.uiState.value.currentLessonIndex)
         viewModel.selectLesson(4)
@@ -109,15 +110,15 @@ class SqlDrillUnitTest {
         assertEquals(1, viewModel.uiState.value.totalSessionsCompleted)
         assertEquals(10, viewModel.uiState.value.bestScore)
 
-        viewModel.openBasicSqlLesson()
-        assertEquals(0, viewModel.uiState.value.currentLessonIndex)
+        viewModel.navigateToSection(ScreenState.LEARN)
+        assertEquals(4, viewModel.uiState.value.currentLessonIndex)
     }
 
     @Test
     fun learning_practiceStartsFreshBasicQuiz() {
         val viewModel = QuizViewModel()
         viewModel.selectDifficultyFilter(DifficultyFilter.ADVANCED)
-        viewModel.openBasicSqlLesson()
+        viewModel.navigateToSection(ScreenState.LEARN)
         viewModel.selectLesson(4)
         viewModel.startBasicSqlPractice()
 
@@ -130,5 +131,61 @@ class SqlDrillUnitTest {
         assertEquals(0, state.currentScore)
         assertTrue(state.answeredResults.isEmpty())
         assertFalse(state.isSubmitted)
+    }
+
+    @Test
+    fun bottomNavigation_preservesEachCoursesPosition() {
+        val viewModel = QuizViewModel()
+        viewModel.selectDifficultyFilter(DifficultyFilter.ADVANCED)
+        viewModel.navigateToSection(ScreenState.LEARN)
+        viewModel.selectLesson(4)
+        viewModel.navigateToSection(ScreenState.JOINS)
+        viewModel.selectJoinLesson(2)
+        viewModel.selectJoinLesson(-1)
+        viewModel.selectJoinLesson(SqlJoinLessonRepository.lessons.size)
+        assertEquals(2, viewModel.uiState.value.currentJoinLessonIndex)
+
+        viewModel.navigateToSection(ScreenState.HOME)
+        viewModel.navigateToSection(ScreenState.LEARN)
+        assertEquals(4, viewModel.uiState.value.currentLessonIndex)
+        viewModel.navigateToSection(ScreenState.JOINS)
+        assertEquals(ScreenState.JOINS, viewModel.uiState.value.currentScreen)
+        assertEquals(2, viewModel.uiState.value.currentJoinLessonIndex)
+        assertEquals(DifficultyFilter.ADVANCED, viewModel.uiState.value.selectedFilter)
+        assertTrue(viewModel.uiState.value.sessionQuestions.isEmpty())
+    }
+
+    @Test
+    fun bottomNavigation_cannotInterruptAnActiveQuiz() {
+        val viewModel = QuizViewModel()
+        viewModel.startQuizSession()
+        val question = viewModel.uiState.value.currentQuestion!!
+        viewModel.selectOption(question.correctOptionIndex)
+        viewModel.submitAnswer()
+        viewModel.navigateToSection(ScreenState.JOINS)
+        viewModel.navigateToSection(ScreenState.RESULT)
+
+        assertEquals(ScreenState.QUIZ, viewModel.uiState.value.currentScreen)
+        assertEquals(1, viewModel.uiState.value.currentScore)
+        assertTrue(viewModel.uiState.value.isSubmitted)
+        assertFalse(ScreenState.QUIZ.isMainSection)
+        assertFalse(ScreenState.RESULT.isMainSection)
+        assertFalse(ScreenState.REVIEW.isMainSection)
+    }
+
+    @Test
+    fun joinsPractice_startsIntermediateSession() {
+        val viewModel = QuizViewModel()
+        viewModel.navigateToSection(ScreenState.JOINS)
+        viewModel.selectJoinLesson(SqlJoinLessonRepository.lessons.lastIndex)
+        viewModel.startJoinPractice()
+
+        val state = viewModel.uiState.value
+        assertEquals(ScreenState.QUIZ, state.currentScreen)
+        assertEquals(DifficultyFilter.INTERMEDIATE, state.selectedFilter)
+        assertEquals(10, state.totalQuestions)
+        assertTrue(state.sessionQuestions.all { it.difficulty == Difficulty.INTERMEDIATE })
+        assertEquals(0, state.currentIndex)
+        assertTrue(state.answeredResults.isEmpty())
     }
 }
