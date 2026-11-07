@@ -1,0 +1,6 @@
+{
+  "name": "SQL Drill",
+  "description": "Interactive SQL quiz and practice app with syntax-highlighted queries, instant feedback, and detailed performance breakdown.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
