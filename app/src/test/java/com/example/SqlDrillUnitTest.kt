@@ -80,4 +80,55 @@ class SqlDrillUnitTest {
         assertEquals(sampleSql, annotated.text)
         assertTrue("Highlighted text must contain span styles", annotated.spanStyles.isNotEmpty())
     }
+
+    @Test
+    fun learning_navigationPreservesQuizStatisticsAndDifficulty() {
+        val viewModel = QuizViewModel()
+        viewModel.selectDifficultyFilter(DifficultyFilter.ADVANCED)
+        viewModel.startQuizSession()
+        repeat(10) {
+            val question = viewModel.uiState.value.currentQuestion!!
+            viewModel.selectOption(question.correctOptionIndex)
+            viewModel.submitAnswer()
+            viewModel.nextQuestion()
+        }
+        viewModel.returnToHome()
+
+        viewModel.openBasicSqlLesson()
+        assertEquals(ScreenState.LEARN, viewModel.uiState.value.currentScreen)
+        assertEquals(0, viewModel.uiState.value.currentLessonIndex)
+        viewModel.selectLesson(4)
+        assertEquals(4, viewModel.uiState.value.currentLessonIndex)
+        viewModel.selectLesson(-1)
+        viewModel.selectLesson(5)
+        assertEquals(4, viewModel.uiState.value.currentLessonIndex)
+
+        viewModel.returnToHome()
+        assertEquals(ScreenState.HOME, viewModel.uiState.value.currentScreen)
+        assertEquals(DifficultyFilter.ADVANCED, viewModel.uiState.value.selectedFilter)
+        assertEquals(1, viewModel.uiState.value.totalSessionsCompleted)
+        assertEquals(10, viewModel.uiState.value.bestScore)
+
+        viewModel.openBasicSqlLesson()
+        assertEquals(0, viewModel.uiState.value.currentLessonIndex)
+    }
+
+    @Test
+    fun learning_practiceStartsFreshBasicQuiz() {
+        val viewModel = QuizViewModel()
+        viewModel.selectDifficultyFilter(DifficultyFilter.ADVANCED)
+        viewModel.openBasicSqlLesson()
+        viewModel.selectLesson(4)
+        viewModel.startBasicSqlPractice()
+
+        val state = viewModel.uiState.value
+        assertEquals(ScreenState.QUIZ, state.currentScreen)
+        assertEquals(DifficultyFilter.BASIC, state.selectedFilter)
+        assertEquals(10, state.totalQuestions)
+        assertTrue(state.sessionQuestions.all { it.difficulty == Difficulty.BASIC })
+        assertEquals(0, state.currentIndex)
+        assertEquals(0, state.currentScore)
+        assertTrue(state.answeredResults.isEmpty())
+        assertFalse(state.isSubmitted)
+    }
 }

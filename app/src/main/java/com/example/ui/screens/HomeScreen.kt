@@ -71,7 +71,8 @@ import com.example.viewmodel.QuizUiState
 fun HomeScreen(
     uiState: QuizUiState,
     onSelectFilter: (DifficultyFilter) -> Unit,
-    onStartSession: () -> Unit
+    onStartSession: () -> Unit,
+    onOpenLearning: () -> Unit
 ) {
     var showCheatSheet by remember { mutableStateOf(false) }
 
@@ -193,6 +194,54 @@ fun HomeScreen(
                     sessionsCompleted = uiState.totalSessionsCompleted,
                     bestScore = uiState.bestScore
                 )
+            }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Belajar per Topik",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Card(
+                        onClick = onOpenLearning,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("basic_sql_learning_card"),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.School,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Basic SQL",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Pahami SELECT, FROM, WHERE, GROUP BY, dan ORDER BY melalui contoh bertahap.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "5 materi · Contoh query & hasil · Mulai belajar →",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
             }
 
             // Section Header
